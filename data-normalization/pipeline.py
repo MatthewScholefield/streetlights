@@ -19,6 +19,12 @@ import petl as etl
 from os import chdir
 from petl import Table
 
+all_attributes = [
+    'PoleID', 'Longitude', 'Latitude', 'LightbulbType',
+    'Wattage', 'Lumens', 'AttachedTech', 'LightAttributes',
+    'FiberWiFiEnable', 'PoleType', 'PoleOwner', 'DataSource'
+]
+
 
 def geom_to_tuple(geom: str) -> tuple:
     """
@@ -69,32 +75,34 @@ def kcmo_convert(filepath: str, xtrapath: str) -> Table:
     """
     kcmo = etl.fromcsv(filepath)
     kcx = etl.fromxlsx(xtrapath)
-    kcjoin = etl.join(kcmo, kcx, lkey='POLEID', rkey='IDNumber')
+    table = etl.join(kcmo, kcx, lkey='POLEID', rkey='IDNumber')
     del kcmo
     del kcx
 
-    kcjoin = etl.addfield(kcjoin, 'PoleID', lambda x: x['POLEID'])
-    kcjoin = etl.addfield(kcjoin, 'Longitude', lambda x: geom_to_tuple(x['the_geom'])[0])
-    kcjoin = etl.addfield(kcjoin, 'Latitude', lambda x: geom_to_tuple(x['the_geom'])[1])
-    kcjoin = etl.addfield(kcjoin, 'LightbulbType', lambda x: x['LUMINAIRE TYPE'])
-    kcjoin = etl.addfield(kcjoin, 'Wattage', lambda x: x['WATTS'])
-    kcjoin = etl.addfield(kcjoin, 'Lumens', None)
-    kcjoin = etl.addfield(kcjoin, 'LightAttributes', lambda x: remove_empty([
-        x['ATTACHMENT 10'], x['ATTACHMENT 9'], x['ATTACHMENT 8'],
-        x['ATTACHMENT 7'], x['ATTACHMENT 6'], x['ATTACHMENT 5'],
-        x['ATTACHMENT 4'], x['ATTACHMENT 3'], x['ATTACHMENT 2'],
-        x['ATTACHMENT 1'], x['SPECIAL_N2'], x['SPECIAL_NO']
-    ]))
-    kcjoin = etl.addfield(kcjoin, 'AttachedTech', lambda x: bool(x['LightAttributes']))
-    kcjoin = etl.addfield(kcjoin, 'FiberWiFiEnable', lambda x: find_wifi(
-        *x['LightAttributes'], x['SPECIAL_N2'], x['SPECIAL_NO']
-    ))
-    kcjoin = etl.addfield(kcjoin, 'PoleType', lambda x: x['POLE TYPE'])
-    kcjoin = etl.addfield(kcjoin, 'PoleOwner', lambda x: x['POLE OWNER'])
-    kcjoin = etl.addfield(kcjoin, 'DataSource', 'Kansas City')
-    return etl.cut(kcjoin, 'PoleID', 'Longitude', 'Latitude', 'LightbulbType',
-                   'Wattage', 'Lumens', 'AttachedTech', 'LightAttributes',
-                   'FiberWiFiEnable', 'PoleType', 'PoleOwner', 'DataSource')
+    for field, value in {
+        'PoleID': lambda x: x['POLEID'],
+        'Longitude': lambda x: geom_to_tuple(x['the_geom'])[0],
+        'Latitude': lambda x: geom_to_tuple(x['the_geom'])[1],
+        'LightbulbType': lambda x: x['LUMINAIRE TYPE'],
+        'Wattage': lambda x: x['WATTS'],
+        'Lumens': None,
+        'LightAttributes': lambda x: remove_empty([
+            x['ATTACHMENT 10'], x['ATTACHMENT 9'], x['ATTACHMENT 8'],
+            x['ATTACHMENT 7'], x['ATTACHMENT 6'], x['ATTACHMENT 5'],
+            x['ATTACHMENT 4'], x['ATTACHMENT 3'], x['ATTACHMENT 2'],
+            x['ATTACHMENT 1'], x['SPECIAL_N2'], x['SPECIAL_NO']
+        ]),
+        'AttachedTech': lambda x: bool(x['LightAttributes']),
+        'FiberWiFiEnable': lambda x: find_wifi(
+            *x['LightAttributes'], x['SPECIAL_N2'], x['SPECIAL_NO']
+        ),
+        'PoleType': lambda x: x['POLE TYPE'],
+        'PoleOwner': lambda x: x['POLE OWNER'],
+        'DataSource': 'Kansas City'
+    }.items():
+        table = etl.addfield(table, field, value)
+
+    return etl.cut(table, all_attributes)
 
 
 def lee_convert(filepath: str) -> Table:
@@ -106,23 +114,23 @@ def lee_convert(filepath: str) -> Table:
     Returns:
         Universal petl.Table object
     """
-    kclee = etl.fromcsv(filepath)
-
-    kclee = etl.addfield(kclee, 'PoleID', lambda x: 'KCLEE' + x['OBJECTID'])
-    kclee = etl.addfield(kclee, 'Longitude', lambda x: x['POINT_X'])
-    kclee = etl.addfield(kclee, 'Latitude', lambda x: x['POINT_Y'])
-    kclee = etl.addfield(kclee, 'LightbulbType', lambda x: x['LAMPTYPE'])
-    kclee = etl.addfield(kclee, 'Wattage', lambda x: x['WATTS'])
-    kclee = etl.addfield(kclee, 'Lumens', lambda x: x['LUMENS'])
-    kclee = etl.addfield(kclee, 'AttachedTech', False)
-    kclee = etl.addfield(kclee, 'LightAttributes', lambda x: x['FIXTURETYP'])
-    kclee = etl.addfield(kclee, 'FiberWiFiEnable', False)
-    kclee = etl.addfield(kclee, 'PoleType', None)
-    kclee = etl.addfield(kclee, 'PoleOwner', 'Lee Summit')
-    kclee = etl.addfield(kclee, 'DataSource', 'Lee Summit')
-    return etl.cut(kclee, 'PoleID', 'Longitude', 'Latitude', 'LightbulbType',
-                   'Wattage', 'Lumens', 'AttachedTech', 'LightAttributes',
-                   'FiberWiFiEnable', 'PoleType', 'PoleOwner', 'DataSource')
+    table = etl.fromcsv(filepath)
+    for field, value in {
+        'PoleID': lambda x: 'KCLEE' + x['OBJECTID'],
+        'Longitude': lambda x: x['POINT_X'],
+        'Latitude': lambda x: x['POINT_Y'],
+        'LightbulbType': lambda x: x['LAMPTYPE'],
+        'Wattage': lambda x: x['WATTS'],
+        'Lumens': lambda x: x['LUMENS'],
+        'AttachedTech': False,
+        'LightAttributes': lambda x: x['FIXTURETYP'],
+        'FiberWiFiEnable': False,
+        'PoleType': None,
+        'PoleOwner': 'Lee Summit',
+        'DataSource': 'Lee Summit'
+    }.items():
+        table = etl.addfield(table, field, value)
+    return etl.cut(table, all_attributes)
 
 
 def kcpl_convert(filepath: str) -> Table:
@@ -139,7 +147,7 @@ def kcpl_convert(filepath: str) -> Table:
         'PoleID': lambda x: x['POLEID'],
         'Longitude': lambda x: x['X-COORD'],
         'Latitude': lambda x: x['Y-COORD'],
-        'LightbulbTyle': None,
+        'LightbulbType': None,
         'Wattage': None,
         'Lumens': None,
         'AttachedTech': False,
@@ -153,7 +161,7 @@ def kcpl_convert(filepath: str) -> Table:
         'DataSource': 'KCPL'
     }.items():
         table = etl.addfield(table, field, value)
-    return table
+    return etl.cut(table, all_attributes)
 
 
 def main():
