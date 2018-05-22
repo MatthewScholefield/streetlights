@@ -36,6 +36,11 @@ def remove_empty(items: list) -> list:
     return [x for x in items if x is not None]
 
 
+def prefix_value(prefix: str, value: str) -> str:
+    """Prepends a prefix if a value isn't empty"""
+    return (prefix + value) if value else ''
+
+
 def find_wifi(*args) -> bool:
     """
     Args:
@@ -120,9 +125,44 @@ def lee_convert(filepath: str) -> Table:
                    'FiberWiFiEnable', 'PoleType', 'PoleOwner', 'DataSource')
 
 
+def kcpl_convert(filepath: str) -> Table:
+    """
+    Converts KCPL's dataset into a universal csv
+
+    Args:
+        filepath: Path to KCPL's csv
+    Returns:
+        Universal petl.Table object
+    """
+    table = etl.fromcsv(filepath)
+    for field, value in {
+        'PoleID': lambda x: x['POLEID'],
+        'Longitude': lambda x: x['X-COORD'],
+        'Latitude': lambda x: x['Y-COORD'],
+        'LightbulbTyle': None,
+        'Wattage': None,
+        'Lumens': None,
+        'AttachedTech': False,
+        'LightAttributes': lambda x: remove_empty([
+            prefix_value('GeoSource-', x['GEO_SOURCE']),
+            prefix_value('RetiredDate-', x['RETIRED_DATE'])
+        ]),
+        'FiberWiFiEnable': False,
+        'PoleType': None,
+        'PoleOwner': 'KCPL',
+        'DataSource': 'KCPL'
+    }.items():
+        table = etl.addfield(table, field, value)
+    return table
+
+
 def main():
     # for testing
     chdir('data')
+    etl.tocsv(
+        kcpl_convert('kcpl-mo-ks.csv'),
+        'kcpl-mo-ks_clean.csv'
+    )
     etl.tocsv(
         kcmo_convert('kansas-city-mo.csv', 'kansas-city-mo-extra.xlsx'),
         'kcmo_clean.csv'
