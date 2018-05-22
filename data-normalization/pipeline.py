@@ -62,6 +62,12 @@ def find_wifi(*args) -> bool:
     return False
 
 
+def print_intro(table: Table, name: str):
+    print('===', name, '===')
+    print(table)
+    print()
+
+
 def kcmo_convert(filepath: str, xtrapath: str) -> Table:
     """
     Takes the both KCMO input datasets and
@@ -76,6 +82,7 @@ def kcmo_convert(filepath: str, xtrapath: str) -> Table:
     kcmo = etl.fromcsv(filepath)
     kcx = etl.fromxlsx(xtrapath)
     table = etl.join(kcmo, kcx, lkey='POLEID', rkey='IDNumber')
+    print_intro(table, 'KCMO')
     del kcmo
     del kcx
 
@@ -115,6 +122,7 @@ def lee_convert(filepath: str) -> Table:
         Universal petl.Table object
     """
     table = etl.fromcsv(filepath)
+    print_intro(table, 'Lee Summit')
     for field, value in {
         'PoleID': lambda x: 'KCLEE-' + x['OBJECTID'],
         'Longitude': lambda x: x['POINT_X'],
@@ -143,6 +151,7 @@ def kcpl_convert(filepath: str) -> Table:
         Universal petl.Table object
     """
     table = etl.fromcsv(filepath)
+    print_intro(table, 'KCPL')
     for field, value in {
         'PoleID': lambda x: x['POLEID'],
         'Longitude': lambda x: x['X-COORD'],
