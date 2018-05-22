@@ -169,15 +169,15 @@ def main():
     chdir('data')
     etl.tocsv(
         kcpl_convert('kcpl-mo-ks.csv'),
-        'kcpl-mo-ks_clean.csv'
+        'kcpl-mo-ks.clean.csv'
     )
     etl.tocsv(
         kcmo_convert('kansas-city-mo.csv', 'kansas-city-mo-extra.xlsx'),
-        'kcmo_clean.csv'
+        'kansas-city-mo.clean.csv'
     )
     etl.tocsv(
         lee_convert('lee-summit-mo.csv'),
-        'kcleesummit_clean.csv'
+        'lee-summit-mo.clean.csv'
     )
     print('done')
 
