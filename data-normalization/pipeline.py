@@ -21,14 +21,15 @@ import petl as etl
 
 # FOR TESTING
 # geom='POINT (-94.574238674757 39.021251335024)'
+
+
 def geom_to_tuple(geom):
     """
     Takes a lat/long point (or geom) from KCMO style csvs.
     Returns (lat, long) tuple
     """
-    geom = geom[6:]
-    geom = geom.replace(" ", ", ")
-    return eval(geom)
+    lat, long = geom.replace('POINT', '').strip('( )').split(' ')
+    return float(lat), float(long)
 
 
 def remove_empty(items):
