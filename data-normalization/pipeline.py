@@ -31,16 +31,9 @@ def geom_to_tuple(geom):
     return eval(geom)
 
 
-def make_a_list(*args):
-    """
-    Takes any number of fields
-    return list of attachements or other feature
-    """
-    attached = []
-    for x in args:
-        if x is not None:
-            attached.append(x)
-    return attached
+def remove_empty(items):
+    """Takes a list of items and returns elements that are not empty"""
+    return [x for x in items if x is not None]
 
 
 def find_wifi(*args):
@@ -75,12 +68,12 @@ def kcmo_convert(filepath, xtrapath):
     kcjoin = etl.addfield(kcjoin, 'LightbulbType', lambda x: x['LUMINAIRE TYPE'])
     kcjoin = etl.addfield(kcjoin, 'Wattage', lambda x: x['WATTS'])
     kcjoin = etl.addfield(kcjoin, 'Lumens', None)
-    kcjoin = etl.addfield(kcjoin, 'LightAttributes', lambda x: make_a_list(
+    kcjoin = etl.addfield(kcjoin, 'LightAttributes', lambda x: remove_empty([
         x['ATTACHMENT 10'], x['ATTACHMENT 9'], x['ATTACHMENT 8'],
         x['ATTACHMENT 7'], x['ATTACHMENT 6'], x['ATTACHMENT 5'],
         x['ATTACHMENT 4'], x['ATTACHMENT 3'], x['ATTACHMENT 2'],
         x['ATTACHMENT 1'], x['SPECIAL_N2'], x['SPECIAL_NO']
-    ))
+    ]))
     kcjoin = etl.addfield(kcjoin, 'AttachedTech', lambda x: bool(x['LightAttributes']))
     kcjoin = etl.addfield(kcjoin, 'FiberWiFiEnable', lambda x: find_wifi(
         *x['LightAttributes'], x['SPECIAL_N2'], x['SPECIAL_NO']
