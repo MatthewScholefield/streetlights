@@ -15,33 +15,31 @@ TODO:
     **move to a central pipline function area
     *Work with SMEs to see if we are understanding light posts correctly. 
 """
-
 import petl as etl
 
 
-# FOR TESTING
-# geom='POINT (-94.574238674757 39.021251335024)'
-
-
-def geom_to_tuple(geom):
+def geom_to_tuple(geom: str) -> tuple:
     """
-    Takes a lat/long point (or geom) from KCMO style csvs.
-    Returns (lat, long) tuple
+    Args:
+        geom: combined KCMO style point string ie. POINT (-94.574238674757 39.021251335024)
+    Returns:
+        latitude and longitude as floats
     """
     lat, long = geom.replace('POINT', '').strip('( )').split(' ')
     return float(lat), float(long)
 
 
-def remove_empty(items):
+def remove_empty(items: list) -> list:
     """Takes a list of items and returns elements that are not empty"""
     return [x for x in items if x is not None]
 
 
-def find_wifi(*args):
+def find_wifi(*args) -> bool:
     """
-    Takes any number of fields
-    Looks for wifi indicators
-    returns Bool
+    Args:
+        args: Any number of fields
+    Returns:
+        Whether the fields indicate wifi
     """
     wifilist = ['Google', 'Sprint', 'Wireless', 'Mobil']
     for x in args:
@@ -51,11 +49,14 @@ def find_wifi(*args):
     return False
 
 
-def kcmo_convert(filepath, xtrapath):
+def kcmo_convert(filepath: str, xtrapath: str):
     """
-    Takes the file path to a csv in the format used by Kansas City proper
-    converts to universal format 
-    outputs csv.
+    Takes the both KCMO input datasets and
+    converts to universal format under data/kcmo_clean.csv
+
+    Args:
+        filepath: Path to primary kcmo csv dataset
+        xtrapath: Path to additional kcmo xlsx dataset
     """
     kcmo = etl.fromcsv(filepath)
     kcx = etl.fromxlsx(xtrapath)
@@ -88,11 +89,13 @@ def kcmo_convert(filepath, xtrapath):
     etl.tocsv(kcjoin, 'data/kcmo_clean.csv')
 
 
-def lee_convert(filepath):
+def lee_convert(filepath: str):
     """
-    Takes the file path to a csv in the format used by Kansas City proper
-    converts to universal format 
-    outputs csv.
+    Converts lee summit's csv into a universal csv
+    under data/kcleesummit_clean.csv
+
+    Args:
+        filepath: Path to lee summit csv
     """
     kclee = etl.fromcsv(filepath)
 
