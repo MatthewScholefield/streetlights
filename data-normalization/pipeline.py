@@ -116,7 +116,7 @@ def lee_convert(filepath: str) -> Table:
     """
     table = etl.fromcsv(filepath)
     for field, value in {
-        'PoleID': lambda x: 'KCLEE' + x['OBJECTID'],
+        'PoleID': lambda x: 'KCLEE-' + x['OBJECTID'],
         'Longitude': lambda x: x['POINT_X'],
         'Latitude': lambda x: x['POINT_Y'],
         'LightbulbType': lambda x: x['LAMPTYPE'],
