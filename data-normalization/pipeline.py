@@ -16,6 +16,8 @@ TODO:
     *Work with SMEs to see if we are understanding light posts correctly. 
 """
 import petl as etl
+from os import chdir
+from petl import Table
 
 
 def geom_to_tuple(geom: str) -> tuple:
@@ -49,14 +51,16 @@ def find_wifi(*args) -> bool:
     return False
 
 
-def kcmo_convert(filepath: str, xtrapath: str):
+def kcmo_convert(filepath: str, xtrapath: str) -> Table:
     """
     Takes the both KCMO input datasets and
-    converts to universal format under data/kcmo_clean.csv
+    converts to a universal format
 
     Args:
         filepath: Path to primary kcmo csv dataset
         xtrapath: Path to additional kcmo xlsx dataset
+    Returns:
+        Universal petl.Table object
     """
     kcmo = etl.fromcsv(filepath)
     kcx = etl.fromxlsx(xtrapath)
@@ -83,19 +87,19 @@ def kcmo_convert(filepath: str, xtrapath: str):
     kcjoin = etl.addfield(kcjoin, 'PoleType', lambda x: x['POLE TYPE'])
     kcjoin = etl.addfield(kcjoin, 'PoleOwner', lambda x: x['POLE OWNER'])
     kcjoin = etl.addfield(kcjoin, 'DataSource', 'Kansas City')
-    kcjoin = etl.cut(kcjoin, 'PoleID', 'Longitude', 'Latitude', 'LightbulbType',
-                     'Wattage', 'Lumens', 'AttachedTech', 'LightAttributes',
-                     'FiberWiFiEnable', 'PoleType', 'PoleOwner', 'DataSource')
-    etl.tocsv(kcjoin, 'data/kcmo_clean.csv')
+    return etl.cut(kcjoin, 'PoleID', 'Longitude', 'Latitude', 'LightbulbType',
+                   'Wattage', 'Lumens', 'AttachedTech', 'LightAttributes',
+                   'FiberWiFiEnable', 'PoleType', 'PoleOwner', 'DataSource')
 
 
-def lee_convert(filepath: str):
+def lee_convert(filepath: str) -> Table:
     """
-    Converts lee summit's csv into a universal csv
-    under data/kcleesummit_clean.csv
+    Converts lee summit's dataset into a universal csv
 
     Args:
         filepath: Path to lee summit csv
+    Returns:
+        Universal petl.Table object
     """
     kclee = etl.fromcsv(filepath)
 
@@ -111,19 +115,22 @@ def lee_convert(filepath: str):
     kclee = etl.addfield(kclee, 'PoleType', None)
     kclee = etl.addfield(kclee, 'PoleOwner', 'Lee Summit')
     kclee = etl.addfield(kclee, 'DataSource', 'Lee Summit')
-    kclee = etl.cut(kclee, 'PoleID', 'Longitude', 'Latitude', 'LightbulbType',
-                    'Wattage', 'Lumens', 'AttachedTech', 'LightAttributes',
-                    'FiberWiFiEnable', 'PoleType', 'PoleOwner', 'DataSource')
-    etl.tocsv(kclee, 'data/kcleesummit_clean.csv')
+    return etl.cut(kclee, 'PoleID', 'Longitude', 'Latitude', 'LightbulbType',
+                   'Wattage', 'Lumens', 'AttachedTech', 'LightAttributes',
+                   'FiberWiFiEnable', 'PoleType', 'PoleOwner', 'DataSource')
 
 
 def main():
     # for testing
-    filepath = 'data/kansas-city-mo.csv'
-    xtrapath = 'data/kansas-city-mo-extra.xlsx'
-    filepath_lee = 'data/lee-summit-mo.csv'
-    kcmo_convert(filepath, xtrapath)
-    lee_convert(filepath_lee)
+    chdir('data')
+    etl.tocsv(
+        kcmo_convert('kansas-city-mo.csv', 'kansas-city-mo-extra.xlsx'),
+        'kcmo_clean.csv'
+    )
+    etl.tocsv(
+        lee_convert('lee-summit-mo.csv'),
+        'kcleesummit_clean.csv'
+    )
     print('done')
 
 
