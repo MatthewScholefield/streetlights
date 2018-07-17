@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -eE
+
 if [ ! -f .venv/bin/python ]; then
     python3 -m venv .venv/
     curl https://bootstrap.pypa.io/get-pip.py | .venv/bin/python
