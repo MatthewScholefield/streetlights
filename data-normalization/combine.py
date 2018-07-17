@@ -14,16 +14,21 @@ def main():
         default=join('data', 'combined.json')
     )
     args = parser.parse_args()
-    combined = []
     args.csv_files = args.csv_files or glob(join('data', '*.clean.csv'))
+
+    rows = []
     for csv_file in args.csv_files:
         print('Loading {}...'.format(csv_file))
         with open(csv_file) as f:
             for i, row in enumerate(DictReader(f)):
                 print(i + 1, '\r', flush=True, end='')
-                combined.append(row)
+                rows.append(row)
+
     with open(args.output_file, 'w') as f:
-        json.dump(combined, f)
+        json.dump({
+            'count': len(rows),
+            'streetlights': rows
+        }, f)
     print('Wrote to', args.output_file)
 
 
